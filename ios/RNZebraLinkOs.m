@@ -85,8 +85,12 @@ RCT_EXPORT_METHOD(print:(NSString *)printerSerialNumber
     [job setGrDate:grDate];
 
 
+    if ( location == nil) {
+        reject(@"ENOENT", @"missing location", NULL);
+    } else {
+        [NSThread detachNewThreadSelector:@selector(sendPrintJob: ) toTarget:self withObject:job];
+    }
     
-    [NSThread detachNewThreadSelector:@selector(sendPrintJob: ) toTarget:self withObject:job];
 }
 
 
@@ -136,6 +140,12 @@ RCT_EXPORT_METHOD(print:(NSString *)printerSerialNumber
     // Print Image
     success = [graphicsUtil printImage:img atX:0 atY:15 withWidth:829.5 withHeight:584.6 andIsInsideFormat:NO error:&error];
     
+    [NSThread sleepForTimeInterval:2.0f];
+
+
+    [printerConnection close];
+    [printerConnection release];
+    // [job release];
     
     if (success == YES && error == nil) {
         job.resolve(@"success");
@@ -145,13 +155,6 @@ RCT_EXPORT_METHOD(print:(NSString *)printerSerialNumber
         job.reject(@"unknown error");
     }
 
-    if (printerConnection) {
-        [printerConnection close];
-    }
-
-    
-    [printerConnection release];
-    [job release];
 }
 
 @end
